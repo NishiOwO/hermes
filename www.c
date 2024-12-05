@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
+#include <ctype.h>
 
 /* assumes X11/HPkeysym.h */
 
@@ -226,12 +227,12 @@ static int hex(char *s)
 {
     int n, c;
 
-    n = toupper((unsigned char *)*s++) - '0';
+    n = toupper(*(unsigned char *)*s++) - '0';
 
     if (n > 9)
         n += '0' - 'A' + 10;
     
-    c = toupper((unsigned char *)*s) - '0';
+    c = toupper(*(unsigned char *)*s) - '0';
 
     if (c > 9)
         c += '0' - 'A' + 10;
@@ -954,7 +955,7 @@ int CloneSelf(void)
 
     /* ensure that children won't become zombies */
 
-    signal(SIGCLD, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
 
     if ((childpid = fork()) < 0)
     {

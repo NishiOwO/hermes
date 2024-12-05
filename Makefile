@@ -20,8 +20,8 @@ MOTIF_CFLAGS = -I /usr/pkg/include
 endif
 
 # linker flags to disable shared libraries for use with 7.0
-LKFLAGS = -Wl,a
-CC    = gcc -g
+LKFLAGS = -fcommon
+CC    = gcc -g -fcommon
 CFLAGS = $(X_CFLAGS)
 LIBS1 = $(X_LIBPATH)  -lX11 -ll -lm
 LIBS2 = $(X_LIBPATH)  -lX11 -lm

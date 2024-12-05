@@ -110,27 +110,6 @@ char *safemalloc(int n)
     return p;
 }
 
-/* duplicate  string s and ensure it is zero terminated
-   where n is the maximum number of chars copied from s */
-
-char *strndup(char *s, int n)
-{
-    char *p;
-
-    p = malloc(n+1);
-
-    if (!p)
-    {
-        Beep();
-        fprintf(stderr, "ERROR: malloc failed, memory exhausted!\n");
-        exit(1);
-    }
-
-    strncpy(p, s, n);
-    p[n] = '\0';
-
-    return p;
-}
 
 /* set current host, scheme etc to self  */
 
@@ -617,18 +596,18 @@ char *HTRQrequestString(Doc *doc, int *len, char *who)
     }
     else
     {
-        sprintf(buf+n, " HTRQ/V1.0\r\n%n", &dn);
+        sprintf(buf+n, " HTTP/1.1\r\n%n", &dn);
         n += dn;
 
         if (who)
 	{
-            sprintf(buf+n, "Authorization: user %s\r\n\r\n%n", who, &dn);
-            n += dn;
+           // sprintf(buf+n, "Authorization: user %s\r\n\r\n%n", who, &dn);
+            //n += dn;
         }
         else if (user)
 	{
-            sprintf(buf+n, "Authorization: user %s\r\n\r\n%n", user, &dn);
-            n += dn;
+            //sprintf(buf+n, "Authorization: user %s\r\n\r\n%n", user, &dn);
+            //n += dn;
         }
         else
 	{

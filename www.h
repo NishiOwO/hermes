@@ -12,7 +12,7 @@
 #define CACHE_PORT      2786
 
 #define NEWS_SERVER     "news"
-#define GATEWAY_HOST    "hplose.hpl.hp.com"         /* TCP/IP gateway to Internet */
+#define GATEWAY_HOST    "hplose.hpl.hp.com         /* TCP/IP gateway to Internet */
 #define HELP_URL   "http://hplose.hpl.hp.com:2784/nfs/hplose/permanent/dsr/www/help.html"
 #define DEFAULT_URL "http://www-hplb.hpl.hp.com/"
 #define PRINTER     "alljet"

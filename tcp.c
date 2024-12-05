@@ -192,13 +192,14 @@ int QueryCacheServer(char *command, char **response)
 int XPConnect(int skt, struct sockaddr *server)
 {
     struct timeval timer;
-    int n, ntime, writefds, exceptfds;
+    int n, ntime;
+    fd_set writefds;
+    fd_set exceptfds;
 
     AbortFlag = 0;
 
     /* set socket to non-blocking i/o */
     n = 1;
-    ioctl(skt, FIONBIO, &n);
 
     n = connect(skt, server, sizeof(struct sockaddr_in));
 
@@ -208,7 +209,8 @@ int XPConnect(int skt, struct sockaddr *server)
     for (ntime = 0; ntime < TIMEOUT && !AbortFlag;)
     {
         errno = 0;
-        writefds = exceptfds = MASK(skt);
+	FD_SET(skt, &writefds);
+	FD_SET(skt, &exceptfds);
         timer.tv_sec = 0;
         timer.tv_usec = 100000;
 
@@ -221,22 +223,24 @@ int XPConnect(int skt, struct sockaddr *server)
             continue;
         }
 
-        if (exceptfds)
+	/*
+        if (FD_ISSET(skt, &exceptfds))
         {
             perror("XPConnect - aborted via signal");
             close(skt);
             return -1;
         }
+	*/
 
         /* writefds implies the connect activity has now completed
            it may have failed, so call connect again to check
            (EISCONN implies socket is already connected, ie success) */
 
-        if (writefds)
+        if (FD_ISSET(skt, &exceptfds))
         {
             n = connect(skt, server, sizeof(struct sockaddr_in));
 
-            if (n == -1 && errno != EISCONN)
+            if (n == -1 && errno != EISCONN && errno != EINPROGRESS)
             {
                 /* EINVAL implies the socket was already shutdown
                    but results in the confusing msg: Invalid argument */
@@ -270,7 +274,9 @@ void sigpipe(int sig)
 int XPSend(int skt, char *data, int len, int once)
 {
     struct timeval timer;
-    int k, ntime, n, writefds, exceptfds;
+    int k, ntime, n;
+    fd_set writefds;
+    fd_set exceptfds;
 
     AbortFlag = 0;
     k = 0;
@@ -285,7 +291,8 @@ int XPSend(int skt, char *data, int len, int once)
         if (k == len)
             return len;
 
-        writefds = exceptfds = MASK(skt);
+        FD_SET(skt, &writefds);
+	FD_SET(skt, &exceptfds);
         timer.tv_sec = 0;
         timer.tv_usec = 100000;
 
@@ -298,13 +305,7 @@ int XPSend(int skt, char *data, int len, int once)
             continue;
         }
 
-        if (exceptfds)
-        {
-            close(skt);
-            return -1;
-        }
-
-        if (writefds)
+        if (FD_ISSET(skt, &writefds))
         {
             n = send(skt, data + k, len - k, 0);
 
@@ -335,7 +336,9 @@ int XPSend(int skt, char *data, int len, int once)
 
 int XPRecv(int skt, char *msg, int len)
 {
-    int n, ntime, readfds, exceptfds;
+    int n, ntime;
+    fd_set readfds;
+    fd_set exceptfds;
     struct timeval timer;
 
     /* I maybe should call recv repeatedly until I have got
@@ -346,7 +349,10 @@ int XPRecv(int skt, char *msg, int len)
 
     for (ntime = 0; ntime < TIMEOUT && !AbortFlag;)
     {
-        readfds = exceptfds = MASK(skt);
+	FD_ZERO(&exceptfds);
+	FD_ZERO(&readfds);
+        FD_SET(skt, &exceptfds);
+        FD_SET(skt, &readfds);
         timer.tv_sec = 0;
         timer.tv_usec = 10000;
 
@@ -359,7 +365,7 @@ int XPRecv(int skt, char *msg, int len)
             continue;
         }
     
-        if (exceptfds & MASK(skt))
+        if (FD_ISSET(skt, &exceptfds))
         {
             perror("XPRecv - aborted via signal");
             Warn("Aborted during receive");
@@ -367,7 +373,10 @@ int XPRecv(int skt, char *msg, int len)
             return -1;
         }
 
-        if (readfds)
+	printf("%d\n", n);
+
+
+        if (n > 0)
             return recv(skt, msg, len, 0);
     }
 
@@ -405,6 +414,9 @@ int Connect(int s, char *host, int port, int *ViaGateway)
         *ViaGateway = 1;
     else if (!*ViaGateway)
         hp = gethostbyname(host);
+
+    hp = gethostbyname(host);
+    *ViaGateway = 0;
 
     if (*ViaGateway || hp == NULL)
     {
@@ -521,7 +533,9 @@ char *GetData(int socket, int *length)
 
     for (m = 0;;)
     {
+	printf("!\n");
         count = XPRecv(socket, buffer+len, size - len);
+	printf("!2\n");
 
         if (count == -1)
         {
