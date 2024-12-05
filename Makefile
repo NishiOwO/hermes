@@ -3,10 +3,21 @@
 # X_CFLAGS		  path used by the cpp to find X include files.
 # MOTIF_CFLAGS		  path used by the cpp to find MOTIF include files.
 
-X_LIBPATH  = -L/usr/local/lib
-MOTIF_LIBPATH = -L /usr/local/lib/Motif1.1
-X_CFLAGS = -I/usr/local/include
-MOTIF_CFLAGS = -I/usr/include/Motif1.1
+X_LIBPATH  =
+MOTIF_LIBPATH =
+
+ifeq ($(shell uname -s),NetBSD)
+X_LIBPATH = -L /usr/X11R7/lib
+MOTIF_LIBPATH = -L /usr/pkg/lib
+endif
+
+X_CFLAGS  =
+MOTIF_CFLAGS =
+
+ifeq ($(shell uname -s),NetBSD)
+X_CFLAGS = -I /usr/X11R7/include
+MOTIF_CFLAGS = -I /usr/pkg/include
+endif
 
 # linker flags to disable shared libraries for use with 7.0
 LKFLAGS = -Wl,a
